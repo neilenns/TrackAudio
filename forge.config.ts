@@ -10,6 +10,8 @@ import { rendererConfig } from "./webpack.renderer.config";
 import fs from "fs";
 import { spawn } from "child_process";
 
+import { MakerSquirrel } from "@electron-forge/maker-squirrel";
+
 const config: ForgeConfig = {
   packagerConfig: {
     name: "TrackAudio",
@@ -24,6 +26,10 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   makers: [
+    new MakerSquirrel({
+      // Sets the icon for the setup executable.
+      setupIcon: path.join(__dirname, "resources", "AppIcon", "AppIcon.ico"),
+    }),
     {
       name: "@psiservices-ccounterman/electron-forge-maker-nsis",
       config: {
