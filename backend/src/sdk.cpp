@@ -7,10 +7,14 @@ SDK::SDK() { this->buildServer(); }
 
 SDK::~SDK()
 {
+    TRACK_LOG_INFO("Shutting down websocket connections");
     for (auto [id, ws] : this->pWsRegistry) {
+        TRACK_LOG_INFO("Calling shutdown for connection {}", id);
         ws->shutdown();
+        TRACK_LOG_INFO("Connection {} closed", id);
         ws.reset();
     }
+    TRACK_LOG_INFO("Websocket connection shutdown complete");
     this->pWsRegistry.clear();
     this->pSDKServer->stop();
     this->pSDKServer.reset();

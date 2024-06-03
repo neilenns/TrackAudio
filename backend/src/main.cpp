@@ -756,7 +756,9 @@ void Exit(const Napi::CallbackInfo& /*info*/)
     if (mClient->IsVoiceConnected()) {
         mClient->Disconnect();
     }
+    TRACK_LOG_INFO("Resetting API server");
     MainThreadShared::mApiServer.reset();
+    TRACK_LOG_INFO("API server reset");
     MainThreadShared::mRemoteDataHandler.reset();
     MainThreadShared::inputHandler.reset();
 
