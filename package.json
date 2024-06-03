@@ -67,6 +67,7 @@
     "bootstrap-scss": "^5.3.3",
     "build-backend": "^1.0.2",
     "clsx": "^2.1.0",
+    "electron-devtools-installer": "^3.2.0",
     "electron-store": "^8.2.0",
     "i": "^0.3.7",
     "npm": "^10.5.1",
