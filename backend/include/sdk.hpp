@@ -180,6 +180,13 @@ private:
     void handleSetStationState(const nlohmann::json json);
 
     /**
+     * Handles the SDK call to add a station.
+     *
+     * @param json The incoming JSON with the station to add.
+     */
+    void handleAddStations(const nlohmann::json json);
+
+    /**
      * Handles the SDK call to publish all the current station states.
      *
      */

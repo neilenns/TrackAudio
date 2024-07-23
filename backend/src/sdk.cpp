@@ -344,12 +344,35 @@ void SDK::publishStationState(const nlohmann::json& state)
     this->broadcastOnWebsocket(state.dump());
 }
 
+void SDK::handleAddStations(const nlohmann::json json)
+{
+    TRACK_LOG_INFO("Received kAddStations message");
+    if (!json["value"].contains("callsigns") || !json["value"]["callsigns"].is_array()) {
+        TRACK_LOG_ERROR("kAddStation requires an array of callsigns");
+        return;
+    }
+
+    for (const auto& callsign : json["value"]["callsigns"]) {
+        TRACK_LOG_INFO("Adding callsign %s", callsign.get<std::string>());
+        if (callsign.is_string()) {
+            mClient->GetStation(callsign);
+            mClient->FetchStationVccs(callsign);
+        } else {
+            TRACK_LOG_ERROR("kAddStation received a callsign taht wasn't a string");
+        }
+    }
+}
+
 void SDK::handleIncomingWebSocketRequest(const std::string& payload)
 {
     try {
         auto json = nlohmann::json::parse(payload);
         std::string messageType = json["type"];
 
+        if (messageType == "kAddStations") {
+            this->handleAddStations(std::move(json));
+            return;
+        }
         if (messageType == "kSetStationState") {
             this->handleSetStationState(std::move(json));
             return;
