@@ -9,7 +9,16 @@ export interface Configuration {
   speakerOutputDeviceId: string;
 
   cid: string;
-  password: string;
+
+  /**
+   * Legacy password.
+   */
+  password?: string;
+
+  /**
+   * Base64-encoded encrypted password.
+   */
+  encryptedPassword?: string;
   callsign: string;
 
   hardwareType: number;

@@ -1,4 +1,13 @@
-import { app, BrowserWindow, dialog, ipcMain, Rectangle, screen, shell } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  Rectangle,
+  screen,
+  shell,
+  safeStorage
+} from 'electron';
 
 import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import * as Sentry from '@sentry/electron/main';
@@ -89,10 +98,26 @@ const loadConfig = () => {
     store.get('configuration', '{}') as string
   ) as Configuration;
 
+  console.log(`SafeStorage: ${safeStorage.isEncryptionAvailable().toString()}`);
+
   // If the configuration file exists then check and see if the version property is missing
   // and an audio API is configured. If that's the case the user will need to reset their
   // audio properties due to the big audio changes introduced after TrackAudio 1.2.
   if (Object.keys(storedConfiguration).length !== 0) {
+    // Migrate the password too.
+    if (
+      storedConfiguration.encryptedPassword === undefined &&
+      storedConfiguration.password !== undefined
+    ) {
+      // Store the new password
+      storedConfiguration.encryptedPassword = safeStorage
+        .encryptString(storedConfiguration.password)
+        .toString('base64');
+
+      // Clear out the old password
+      storedConfiguration.password = undefined;
+    }
+
     if (storedConfiguration.version === undefined && storedConfiguration.audioApi !== -1) {
       storedConfiguration.audioApi = defaultConfiguration.audioApi;
       storedConfiguration.audioInputDeviceId = defaultConfiguration.audioInputDeviceId;
@@ -488,7 +513,7 @@ ipcMain.handle('set-cid', (_, cid: string) => {
 });
 
 ipcMain.handle('set-password', (_, password: string) => {
-  currentConfiguration.password = password;
+  currentConfiguration.encryptedPassword = safeStorage.encryptString(password).toString('base64');
   saveConfig();
 });
 
@@ -501,7 +526,15 @@ ipcMain.handle('connect', () => {
     return false;
   }
   setAudioSettings();
-  return TrackAudioAfv.Connect(currentConfiguration.password);
+
+  if (!currentConfiguration.encryptedPassword) {
+    return;
+  }
+
+  const password = safeStorage.decryptString(
+    Buffer.from(currentConfiguration.encryptedPassword, 'base64')
+  );
+  return TrackAudioAfv.Connect(password);
 });
 
 ipcMain.handle('disconnect', () => {
