@@ -100,39 +100,43 @@ const loadConfig = () => {
 
   console.log(`SafeStorage: ${safeStorage.isEncryptionAvailable().toString()}`);
 
-  // If the configuration file exists then check and see if the version property is missing
-  // and an audio API is configured. If that's the case the user will need to reset their
-  // audio properties due to the big audio changes introduced after TrackAudio 1.2.
+  // If the configuration file exists then check for upgrades
   if (Object.keys(storedConfiguration).length !== 0) {
-    // Migrate the password too.
-    if (
-      storedConfiguration.encryptedPassword === undefined &&
-      storedConfiguration.password !== undefined
-    ) {
-      // Store the new password
-      storedConfiguration.encryptedPassword = safeStorage
-        .encryptString(storedConfiguration.password)
-        .toString('base64');
+    // Upgrade: from v1 to v2 if the version is undefined
+    if (storedConfiguration.version === undefined) {
+      // Migrate the password.
+      if (
+        storedConfiguration.encryptedPassword === undefined &&
+        storedConfiguration.password !== undefined
+      ) {
+        // Store the new password
+        storedConfiguration.encryptedPassword = safeStorage
+          .encryptString(storedConfiguration.password)
+          .toString('base64');
 
-      // Clear out the old password
-      storedConfiguration.password = undefined;
-    }
+        // Clear out the old password
+        storedConfiguration.password = undefined;
+      }
 
-    if (storedConfiguration.version === undefined && storedConfiguration.audioApi !== -1) {
-      storedConfiguration.audioApi = defaultConfiguration.audioApi;
-      storedConfiguration.audioInputDeviceId = defaultConfiguration.audioInputDeviceId;
-      storedConfiguration.headsetOutputDeviceId = defaultConfiguration.headsetOutputDeviceId;
-      storedConfiguration.speakerOutputDeviceId = defaultConfiguration.speakerOutputDeviceId;
+      // Migrate the audio settings
+      if (storedConfiguration.audioApi !== -1) {
+        storedConfiguration.audioApi = defaultConfiguration.audioApi;
+        storedConfiguration.audioInputDeviceId = defaultConfiguration.audioInputDeviceId;
+        storedConfiguration.headsetOutputDeviceId = defaultConfiguration.headsetOutputDeviceId;
+        storedConfiguration.speakerOutputDeviceId = defaultConfiguration.speakerOutputDeviceId;
 
-      dialog.showMessageBoxSync({
-        type: 'warning',
-        message:
-          'Your audio settings have been reset. Please re-configure your audio devices in the settings.',
-        buttons: ['OK']
-      });
+        dialog.showMessageBoxSync({
+          type: 'warning',
+          message:
+            'Your audio settings have been reset. Please re-configure your audio devices in the settings.',
+          buttons: ['OK']
+        });
 
-      // Set the flag to force the settings dialog to show on launch.
-      autoOpenSettings = true;
+        // Set the flag to force the settings dialog to show on launch.
+        autoOpenSettings = true;
+      }
+
+      saveConfig();
     }
   }
   // No saved settings were loaded so auto-show the settings on launch.
