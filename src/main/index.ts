@@ -466,14 +466,10 @@ ipcMain.handle('set-password', (_, password: string) => {
 //
 
 ipcMain.handle('connect', () => {
-  if (!currentConfiguration.password || !currentConfiguration.cid) {
+  if (!currentConfiguration.encryptedPassword || !currentConfiguration.cid) {
     return false;
   }
   setAudioSettings();
-
-  if (!currentConfiguration.encryptedPassword) {
-    return;
-  }
 
   const password = safeStorage.decryptString(
     Buffer.from(currentConfiguration.encryptedPassword, 'base64')
